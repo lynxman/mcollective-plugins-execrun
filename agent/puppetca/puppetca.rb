@@ -45,9 +45,12 @@ module MCollective
             # revoke a cert, do the slow call to puppetca so we're 100%
             # certain we're doing the right thing
             action "revoke" do
-                 validate :certname, :shellsafe
-
-                 reply[:out] = %x[#{@puppetca} --color=none --revoke '#{request[:certname]}']
+                validate :certname, :shellsafe
+                if respond_to?(:run)
+                    reply[:exitcode] = run("#{@puppetca} --color=none --revoke '#{request[:certname]}'", :stdout => :out, :chomp => true)
+                else
+                    reply[:out] = %x[#{@puppetca} --color=none --revoke '#{request[:certname]}']
+                end
             end
 
             # sign a cert if we have one waiting
@@ -59,7 +62,11 @@ module MCollective
                  reply.fail! "Already have a cert for #{certname} not attempting to sign again" if has_cert?(certname)
 
                  if cert_waiting?(certname)
-                     reply[:out] = %x[#{@puppetca} --color=none --sign '#{request[:certname]}']
+                    if respond_to?(:run)
+                        reply[:exitcode] = run("#{@puppetca} --color=none --sign '#{request[:certname]}'", :stdout => :out, :chomp => true)
+                    else
+                        reply[:out] = %x[#{@puppetca} --color=none --sign '#{request[:certname]}']
+                    end
                  else
                      reply.fail "No cert found to sign"
                  end
