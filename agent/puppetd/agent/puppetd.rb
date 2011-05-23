@@ -86,13 +86,26 @@ module MCollective
                     reply.fail "Lock file exists, puppetd is already running or it's disabled"
                 else
                     if request[:forcerun]
-                        reply[:output] = %x[#{@puppetd} --onetime]
+                        if respond_to?(:run)
+                            reply[:exitcode] = run("#{@puppetd} --onetime", :stdout => :output, :chomp => true)
+                        else
+                            reply[:output] = %x[#{@puppetd} --onetime]
+                        end
 
                     elsif @splaytime > 0
-                        reply[:output] = %x[#{@puppetd} --onetime --splaylimit #{@splaytime} --splay]
+                        if respond_to?(:run)
+                            reply[:exitcode] = run("#{@puppetd} --onetime --splaylimit #{@splaytime} --splay", :stdout => :output, :chomp => true)
+                        else
+                            reply[:output] = %x[#{@puppetd} --onetime --splaylimit #{@splaytime} --splay]
+                        end
 
                     else
                         reply[:output] = %x[#{@puppetd} --onetime]
+                        if respond_to?(:run)
+                            reply[:exitcode] = run("#{@puppetd} --onetime", :stdout => :output, :chomp => true)
+                        else
+                            reply[:output] = %x[#{@puppetd} --onetime]
+                        end
                     end
                 end
             end
